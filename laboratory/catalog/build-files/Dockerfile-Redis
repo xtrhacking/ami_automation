@@ -1,0 +1,8 @@
+FROM vulhub/redis:5.0.7
+
+RUN mkdir -p /home/redis && \
+    chown -R redis:redis /home/redis && \
+    chmod 777 /home/redis && \
+    echo 'Extreme{f8c82873ec72e174f5b7452abf725a239e5d0fb5}' > /home/redis/flag.txt
+
+CMD ["redis-server", "/etc/redis/redis.conf"]

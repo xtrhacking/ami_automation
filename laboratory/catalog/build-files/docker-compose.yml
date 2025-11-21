@@ -1,0 +1,72 @@
+volumes:
+    logs:
+        driver: local
+    mysql-data3:
+        driver: local
+    redis_data:
+        driver: local
+services:
+    nginx:
+        restart: always
+        image: nginx:latest
+        ports:
+            - "8088:80" # we use port 8081 so it doesn't conflict with burp proxy defaults
+        volumes:
+            - ./code:/var/www/html
+            - ./nginx-config:/etc/nginx/conf.d
+        depends_on:
+            slim:
+                condition: service_started
+        networks:
+            - slim_network
+    slim:
+        restart: always
+        build:
+            context: .
+            dockerfile: Dockerfile
+        volumes:
+            - ./code:/var/www/html
+            - logs:/var/www/logs
+        networks:
+            - slim_network
+        environment:
+            - DB_HOST=mysql  # Nome do serviço do MySQL
+            - DB_PORT=3306
+            - DB_NAME=playground
+            - DB_USER=play
+            - DB_PASSWORD=playground
+        depends_on:
+            - mysql
+            - redis
+    mysql:
+        restart: always
+        image: mysql:8
+        container_name: mysql_sqli
+        environment:            
+            - MYSQL_ROOT_PASSWORD=safe_password
+            - MYSQL_DATABASE=playground
+            - MYSQL_USER=play
+            - MYSQL_PASSWORD=playground
+            - MYSQL_CHARSET=utf8mb4
+            - MYSQL_COLLATION=utf8mb4_unicode_ci
+        volumes:
+            - mysql-data3:/var/lib/mysql  # Persiste os dados do MySQL
+            - ./db-init-scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+            - ./mysql-config/my.cnf:/etc/mysql/conf.d/my.cnf
+        networks:
+            - slim_network
+        healthcheck:
+            test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+            timeout: 20s
+            retries: 10
+    redis:
+        build:
+            context: .
+            dockerfile: Dockerfile-Redis
+        volumes:
+            - redis_data:/data
+        networks:
+            - slim_network
+networks:
+  slim_network:
+    driver: bridge

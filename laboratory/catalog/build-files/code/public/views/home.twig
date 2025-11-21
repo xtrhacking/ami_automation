@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }}</title>
+    <link href="static/css/bootstrap.css" rel="stylesheet">
+     <style>
+        html, body {
+            height: 100%;
+        }
+        .container-fluid {
+            height: 100vh;
+        }
+        .row {
+            height: 100%;
+        }
+        .sidebar {
+            height: 100vh;
+            position: fixed;
+            top: 56px; /* Ajusta a posição abaixo da topbar */
+            left: 0;
+            width: 250px;
+            background: #f8f9fa;
+            padding-top: 10px;
+        }
+        .content {
+            margin-left: 250px;
+            margin-top: 56px;
+            padding: 20px;
+        }
+        .topbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 56px;
+            background:rgb(4, 27, 51);
+            color: yellow;  /* Changed from white to yellow */
+            
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            font-size: 20px;
+            font-weight: bold;
+
+        }
+    </style>
+</head>
+
+    <div class="topbar">
+        {{ topbar }}
+    </div>
+ <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
+                <div class="position-sticky">
+                    <ul class="nav flex-column">
+                        {% for name, link in sidebar %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ link }}">{{ name }}</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </nav>
+
+         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 content">
+                {% block content %}
+                {% endblock %}
+            </main>
+        </div>
+    </div>
+    <script src="static/js/bootstrap.js"></script>
+</body>
+</html>

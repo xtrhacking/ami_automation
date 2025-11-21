@@ -1,0 +1,103 @@
+{% extends "home.twig" %}
+
+{% block content %}
+    <div class="services-container">
+        
+<div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-primary">
+                    <div class="card-body">
+                        <h5 class="card-title text-primary">{{ title }}</h5>
+                        <p class="card-text">
+                            {{ description }}
+                        </p>
+                        {% if tip %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> Tip: {{ tip }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+      
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+
+                    {% if filtro %}
+
+                     <div class="mb-3">
+                            <label for="orderBy" class="form-label">Order by:</label>
+                            <select class="form-select" id="orderBy" onchange="reorderTable(this.value)">
+                                <option value="">Select order</option>
+                                <option value="nomecompleto">Name</option>
+                                <option value="email">Email</option>
+                            </select>
+                        </div>
+                     {% endif %}
+                        
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% if contacts %}
+                                        {% for contact in contacts %}
+                                            <tr>
+                                                <td>{{ contact.nomecompleto }}</td>
+                                                <td>{{ contact.email }}</td>
+                                                
+                                            </tr>
+                                        {% endfor %}
+                                        
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="4" class="text-center">No contacts found</td>
+                                        </tr>
+                                    {% endif %}
+                                    {% if instructions %}
+        
+
+                                </tbody>
+                            </table>
+                            <div class="row mb-4">
+            <div class="col-12">
+                <div class="card bg-light">
+                    <div class="card-body">
+                        <h5 class="card-title">Redis Status</h5>
+                            <div class="bg-dark text-success p-3 rounded">
+                                <code style="color: #00ff00;">{{ instructions }}</code>
+                            </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+     <script>
+    function reorderTable(orderBy) {
+        const currentUrl = new URL(window.location.href);
+        if (orderBy) {
+            currentUrl.searchParams.set('order_by', orderBy);
+        } else {
+            currentUrl.searchParams.delete('order_by');
+        }
+        window.location.href = currentUrl.toString();
+    }
+    </script>
+{% endblock %}
