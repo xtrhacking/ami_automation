@@ -16,8 +16,8 @@ sudo apt autoremove
 mv /root/build-files /opt/catalog
 cd /opt/catalog
 
-# docker compose build
-# docker compose up -d
+docker compose build
+docker compose up -d
 
 echo "Docker installed"
 
