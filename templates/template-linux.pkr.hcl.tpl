@@ -96,6 +96,15 @@ build {
     destination = "/tmp/build-files/"
   }
 
+  # Move files to /root with sudo
+  provisioner "shell" {
+    inline = [
+      "sudo mkdir -p /root/build-files",
+      "sudo mv /tmp/build-files/* /root/build-files/",
+      "sudo chown -R root:root /root/build-files"
+    ]
+  }
+
   # Execute the main setup script
   provisioner "shell" {
     script = "${path.root}/{{USERDATA_SCRIPT}}"
