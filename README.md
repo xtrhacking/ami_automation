@@ -1,4 +1,4 @@
-# v2-ami-automation
+# AMI Automator
 
 Sistema de automação para criação de AMIs (Amazon Machine Images) usando Packer para laboratórios de segurança e ambientes de teste.
 
@@ -15,8 +15,6 @@ Sistema de automação para criação de AMIs (Amazon Machine Images) usando Pac
 - [Sistemas Operacionais Suportados](#sistemas-operacionais-suportados)
 - [Configuração de Laboratórios](#configuração-de-laboratórios)
 - [Tags e Metadados](#tags-e-metadados)
-- [Troubleshooting](#troubleshooting)
-- [Arquitetura](#arquitetura)
 
 ## 🎯 Visão Geral
 
@@ -527,8 +525,8 @@ Toda AMI criada recebe automaticamente as seguintes tags:
 | CreatedBy        | Criador (sempre "packer")                    | packer                               |
 | Environment      | Ambiente (sempre "laboratory")               | laboratory                           |
 | ManagedBy        | Sistema gerenciador                          | v2-ami-automation                    |
-| **SourceAmiId**  | ID da AMI fonte*                             | ami-0abcdef1234567890                |
-| **SourceAmiName**| Nome da AMI fonte                            | ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-20231001 |
+| **SourceAmiId**  | ID da AMI source                             | ami-0abcdef1234567890                |
+| **SourceAmiName**| Nome da AMI source                           | ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-20231001 |
 
 ### Manifest File
 

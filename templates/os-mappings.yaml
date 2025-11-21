@@ -1,0 +1,82 @@
+# OS Mappings Configuration for AMI Automation
+# Each OS mapping defines how to find the latest official AMI for that operating system
+
+os_mappings:
+  ubuntu-25:
+    name: "Ubuntu 25.04 LTS"
+    owner: "099720109477"  # Canonical
+    filter: "ubuntu/images/hvm-ssd-gp3/ubuntu-plucky-25.04-amd64-server-*"
+    user_data_type: "shell"
+    ssh_username: "ubuntu"
+
+  ubuntu-24:
+    name: "Ubuntu 24.04 LTS"
+    owner: "099720109477"  # Canonical
+    filter: "ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"
+    user_data_type: "shell"
+    ssh_username: "ubuntu"
+
+  ubuntu-22:
+    name: "Ubuntu 22.04 LTS"
+    owner: "099720109477"  # Canonical
+    filter: "ubuntu/images/hvm-ssd-gp3/ubuntu-jammy-22.04-amd64-server-*"
+    user_data_type: "shell"
+    ssh_username: "ubuntu"
+
+  ubuntu-20:
+    name: "Ubuntu 20.04 LTS"
+    owner: "099720109477"  # Canonical
+    filter: "ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"
+    user_data_type: "shell"
+    ssh_username: "ubuntu"
+
+  windows-server-2019:
+    name: "Windows Server 2019 Base"
+    owner: "amazon"
+    filter: "Windows_Server-2019-English-Full-Base-*"
+    user_data_type: "powershell"
+    ssh_username: "Administrator"
+    communicator: "winrm"
+
+  windows-server-2022:
+    name: "Windows Server 2022 Base"
+    owner: "amazon"
+    filter: "Windows_Server-2022-English-Full-Base-*"
+    user_data_type: "powershell"
+    ssh_username: "Administrator"
+    communicator: "winrm"
+
+  centos-7:
+    name: "CentOS 7"
+    owner: "125523088429"  # CentOS official
+    filter: "CentOS 7.*x86_64*"
+    user_data_type: "shell"
+    ssh_username: "centos"
+
+  amazon-linux-2:
+    name: "Amazon Linux 2"
+    owner: "amazon"
+    filter: "amzn2-ami-hvm-*-x86_64-gp2"
+    user_data_type: "shell"
+    ssh_username: "ec2-user"
+
+  amazon-linux-2023:
+    name: "Amazon Linux 2023"
+    owner: "amazon"
+    filter: "al2023-ami-*-x86_64"
+    user_data_type: "shell"
+    ssh_username: "ec2-user"
+
+  debian-12:
+    name: "Debian 12 (Bookworm)"
+    owner: "136693071363"  # Debian official
+    filter: "debian-12-amd64-*"
+    user_data_type: "shell"
+    ssh_username: "admin"
+
+  debian-11:
+    name: "Debian 11 (Bullseye)"
+    owner: "136693071363"  # Debian official
+    filter: "debian-11-amd64-*"
+    user_data_type: "shell"
+    ssh_username: "admin"
