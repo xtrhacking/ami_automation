@@ -38,11 +38,17 @@ __pycache__/
 *$py.class
 .Python
 venv/
+.venv/
 ENV/
+*.egg-info/
+.eggs/
 
 # Test results
 test-results/
 coverage/
+.pytest_cache/
+.coverage
+htmlcov/
 
 # Don't ignore .gitkeep files
 !.gitkeep

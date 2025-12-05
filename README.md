@@ -32,13 +32,14 @@ Automação para gerar AMIs na AWS.
 
 ```bash
 # macOS (usando Homebrew)
-brew install awscli packer git yq
+brew install awscli packer git yq python3
 
 # Verificar instalação
 aws --version
 packer --version
 git --version
 yq --version
+python3 --version
 ```
 
 ### Versões Recomendadas
@@ -47,6 +48,7 @@ yq --version
 - **Packer**: >= 1.8.0
 - **Git**: >= 2.0
 - **yq**: >= 4.0
+- **Python**: >= 3.8
 
 ### Credenciais AWS
 
@@ -126,9 +128,31 @@ cd ami-automation
 # Verifique os pré-requisitos
 make check-prereqs
 
+# Instale as dependências Python (cria ambiente virtual automaticamente)
+make install-deps
+
 # Verifique as credenciais AWS
 make check-aws-creds
 ```
+
+### Ambiente Virtual Python
+
+O projeto utiliza um ambiente virtual Python (`venv`) para gerenciar dependências de forma isolada. Este ambiente é criado automaticamente quando você executa comandos que precisam dele.
+
+**Criação automática:**
+- O ambiente virtual é criado automaticamente ao executar `make build-ami`, `make init-lab`, ou `make add-os`
+- Você também pode criá-lo manualmente com `make install-deps`
+
+**Ativação manual (opcional):**
+```bash
+# Ativar o ambiente virtual
+source venv/bin/activate
+
+# Desativar o ambiente virtual
+deactivate
+```
+
+**Nota:** Não é necessário ativar manualmente o ambiente virtual ao usar os comandos `make`. O Makefile já faz isso automaticamente.
 
 ## 📁 Estrutura do Projeto
 
@@ -146,9 +170,9 @@ v2-ami-automation/
 │   │       └── config.json
 │   └── ...
 ├── scripts/                    # Scripts de automação
-│   ├── generate-lab-files.sh  # Gera arquivos HCL do Packer
-│   ├── get-latest-ami.sh      # Busca AMI mais recente
-│   └── add-os-mapping.sh      # Adiciona novo OS
+│   ├── generate_lab_files.py  # Gera arquivos HCL do Packer
+│   ├── get_latest_ami.py      # Busca AMI mais recente
+│   └── add_os_mapping.py      # Adiciona novo OS
 ├── templates/                  # Templates base
 │   ├── template-linux.pkr.hcl.tpl
 │   ├── template-windows.pkr.hcl.tpl
@@ -163,22 +187,25 @@ v2-ami-automation/
 # 1. Verificar pré-requisitos
 make check-prereqs
 
-# 2. Listar sistemas operacionais disponíveis
+# 2. Instalar dependências Python (cria ambiente virtual automaticamente)
+make install-deps
+
+# 3. Listar sistemas operacionais disponíveis
 make list-os
 
-# 3. Criar um novo laboratório
+# 4. Criar um novo laboratório
 make init-lab FOLDER=meu-lab OS=ubuntu-24
 
-# 4. Editar o script de configuração
+# 5. Editar o script de configuração
 vim laboratory/meu-lab/userdata.sh
 
-# 5. Adicionar arquivos necessários
+# 6. Adicionar arquivos necessários
 cp /path/to/files/* laboratory/meu-lab/build-files/
 
-# 6. Validar configuração
+# 7. Validar configuração
 make validate FOLDER=meu-lab
 
-# 7. Buildar a AMI
+# 8. Buildar a AMI
 make build-ami FOLDER=meu-lab OS=ubuntu-24
 ```
 
@@ -218,6 +245,13 @@ make build-ami FOLDER=<nome> OS=<os-type>
 
 # Buildar AMI com ID específico (útil para testar vulnerabilidades)
 make build-ami FOLDER=<nome> OS=<os-type> AMI_ID=ami-0123456789abcdef0
+```
+
+### Dependências
+
+```bash
+# Instalar/atualizar dependências Python
+make install-deps
 ```
 
 ### Limpeza

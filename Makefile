@@ -10,7 +10,7 @@
 #   make add-os OS=ubuntu-26
 #   make help
 
-.PHONY: help build-ami validate list-labs list-os add-os init-lab clean check-prereqs
+.PHONY: help build-ami validate list-labs list-os add-os init-lab clean check-prereqs test test-coverage install-deps
 
 # Colors for output
 RED     := \033[0;31m
@@ -32,7 +32,7 @@ TEMPLATES_DIR := $(PROJECT_ROOT)/templates
 OS_MAPPINGS  := $(TEMPLATES_DIR)/os-mappings.yaml
 
 # Required tools
-REQUIRED_TOOLS := aws packer git yq
+REQUIRED_TOOLS := aws packer git python3
 
 # Timestamp for logging
 TIMESTAMP := $(shell date +"%Y%m%d-%H%M%S")
@@ -80,8 +80,18 @@ check-prereqs: ## Check if all required tools are installed
 		echo ""; \
 		echo "$(RED)[ERROR]$(NC) Missing required tools:$$missing_tools"; \
 		echo "$(YELLOW)[INFO]$(NC) Please install missing tools:"; \
-		echo "  brew install awscli packer git yq"; \
+		echo "  brew install awscli packer git python3"; \
 		exit 1; \
+	fi
+	@echo "$(BLUE)[CHECK]$(NC) Checking Python dependencies..."
+	@if [ -d "venv" ]; then \
+		source venv/bin/activate && python3 -c "import yaml" 2>/dev/null && \
+		echo "$(GREEN)[✓]$(NC) Python dependencies satisfied (venv)!"; \
+	elif python3 -c "import yaml" 2>/dev/null; then \
+		echo "$(GREEN)[✓]$(NC) Python dependencies satisfied (system)!"; \
+	else \
+		echo "$(YELLOW)[!]$(NC) PyYAML not installed. Run: make install-deps"; \
+		echo "$(YELLOW)[INFO]$(NC) This will create a virtual environment and install dependencies"; \
 	fi
 	@echo "$(GREEN)[✓]$(NC) All prerequisites satisfied!"
 
@@ -142,15 +152,15 @@ list-os: ## List all configured operating systems
 		echo "$(RED)[ERROR]$(NC) OS mappings file not found: $(OS_MAPPINGS)"; \
 		exit 1; \
 	fi
-	@yq eval '.os_mappings | to_entries | .[] | .key + "|||" + .value.name + "|||" + .value.user_data_type + "|||" + .value.ssh_username' $(OS_MAPPINGS) | \
-		while IFS='|||' read -r key name type user; do \
+	@yq eval '.os_mappings | to_entries[] | [.key, .value.name, .value.user_data_type, .value.ssh_username] | @tsv' $(OS_MAPPINGS) | \
+		while IFS=$$'\t' read -r key name type user; do \
 			printf "$(GREEN)%-20s$(NC) $(BLUE)%-35s$(NC) $(YELLOW)%-12s$(NC) $(CYAN)%s$(NC)\n" "$$key" "$$name" "$$type" "$$user"; \
 		done
 	@echo ""
 	@echo "$(YELLOW)[INFO]$(NC) Use these OS keys with: make build-ami FOLDER=<lab> OS=<os-key>"
 	@echo ""
 
-add-os: ## Add a new OS mapping (requires OS=<os-key>)
+add-os: install-deps ## Add a new OS mapping (requires OS=<os-key>)
 	@if [ -z "$(OS)" ]; then \
 		echo "$(RED)[ERROR]$(NC) OS parameter is required"; \
 		echo "$(YELLOW)[INFO]$(NC) Usage: make add-os OS=<os-key>"; \
@@ -158,9 +168,9 @@ add-os: ## Add a new OS mapping (requires OS=<os-key>)
 		exit 1; \
 	fi
 	@echo "$(BLUE)[INFO]$(NC) Adding new OS mapping: $(OS)"
-	@$(SCRIPTS_DIR)/add-os-mapping.sh "$(OS)"
+	@source venv/bin/activate && python3 $(SCRIPTS_DIR)/add_os_mapping.py "$(OS)"
 
-init-lab: check-prereqs check-aws-creds ## Initialize a new laboratory (requires FOLDER=<name> OS=<os-type>)
+init-lab: check-prereqs check-aws-creds install-deps ## Initialize a new laboratory (requires FOLDER=<name> OS=<os-type>)
 	@if [ -z "$(FOLDER)" ]; then \
 		echo "$(RED)[ERROR]$(NC) FOLDER parameter is required"; \
 		echo "$(YELLOW)[INFO]$(NC) Usage: make init-lab FOLDER=<lab-name> OS=<os-type>"; \
@@ -232,7 +242,7 @@ init-lab: check-prereqs check-aws-creds ## Initialize a new laboratory (requires
 		chmod +x $$userdata_file; \
 	fi; \
 	echo "$(GREEN)[✓]$(NC) Created userdata script"; \
-	$(SCRIPTS_DIR)/generate-lab-files.sh "$(FOLDER)" "$(OS)"; \
+	source venv/bin/activate && python3 $(SCRIPTS_DIR)/generate_lab_files.py "$(FOLDER)" "$(OS)"; \
 	trap - EXIT; \
 	echo ""; \
 	echo "$(GREEN)╔════════════════════════════════════════════════════════════════╗$(NC)"; \
@@ -309,7 +319,7 @@ validate: check-prereqs ## Validate Packer configuration (requires FOLDER=<lab-n
 	@echo ""
 	@echo "$(GREEN)[✓]$(NC) Validation completed successfully!"
 
-build-ami: check-prereqs check-aws-creds ## Build AMI (requires FOLDER=<lab-name>, optional: OS=<os-type> AMI_ID=<ami-id>)
+build-ami: check-prereqs check-aws-creds install-deps ## Build AMI (requires FOLDER=<lab-name>, optional: OS=<os-type> AMI_ID=<ami-id>)
 	@if [ -z "$(FOLDER)" ]; then \
 		echo "$(RED)[ERROR]$(NC) FOLDER parameter is required"; \
 		echo "$(YELLOW)[INFO]$(NC) Usage: make build-ami FOLDER=<lab-name> [OS=<os-type>] [AMI_ID=<ami-id>]"; \
@@ -377,9 +387,9 @@ build-ami: check-prereqs check-aws-creds ## Build AMI (requires FOLDER=<lab-name
 	fi; \
 	echo "$(YELLOW)[⚠]$(NC) Regenerating Packer files..."; \
 	if [ -n "$(AMI_ID)" ]; then \
-		$(SCRIPTS_DIR)/generate-lab-files.sh "$(FOLDER)" "$$OS_TYPE" "$(AMI_ID)" > /dev/null 2>&1; \
+		source venv/bin/activate && python3 $(SCRIPTS_DIR)/generate_lab_files.py "$(FOLDER)" "$$OS_TYPE" "$(AMI_ID)" > /dev/null 2>&1; \
 	else \
-		$(SCRIPTS_DIR)/generate-lab-files.sh "$(FOLDER)" "$$OS_TYPE" > /dev/null 2>&1; \
+		source venv/bin/activate && python3 $(SCRIPTS_DIR)/generate_lab_files.py "$(FOLDER)" "$$OS_TYPE" > /dev/null 2>&1; \
 	fi; \
 	echo "$(GREEN)[✓]$(NC) Generated variables.pkr.hcl"; \
 	echo "$(GREEN)[✓]$(NC) Generated template.pkr.hcl"; \
@@ -432,6 +442,42 @@ build-ami: check-prereqs check-aws-creds ## Build AMI (requires FOLDER=<lab-name
 			exit 1; \
 		fi
 
+##@ Testing
+
+test: ## Run Python unit tests
+	@echo "$(BLUE)[INFO]$(NC) Running unit tests..."
+	@if [ ! -d ".venv" ]; then \
+		echo "$(YELLOW)[INFO]$(NC) Creating virtual environment..."; \
+		python3 -m venv .venv; \
+		.venv/bin/pip install -q pyyaml pytest pytest-mock; \
+	fi
+	@.venv/bin/python -m pytest tests/ -v --tb=short
+	@echo "$(GREEN)[✓]$(NC) All tests passed!"
+
+test-coverage: ## Run tests with coverage report
+	@echo "$(BLUE)[INFO]$(NC) Running tests with coverage..."
+	@if [ ! -d ".venv" ]; then \
+		echo "$(YELLOW)[INFO]$(NC) Creating virtual environment..."; \
+		python3 -m venv .venv; \
+		.venv/bin/pip install -q pyyaml pytest pytest-mock pytest-cov; \
+	fi
+	@.venv/bin/python -m pytest tests/ -v --cov=scripts --cov-report=term-missing --cov-report=html
+	@echo "$(GREEN)[✓]$(NC) Coverage report generated in htmlcov/"
+
+install-deps: ## Install Python dependencies in virtual environment
+	@if [ ! -d "venv" ]; then \
+		echo "$(BLUE)[INFO]$(NC) Creating virtual environment..."; \
+		python3 -m venv venv; \
+		echo "$(GREEN)[✓]$(NC) Virtual environment created"; \
+	fi
+	@if [ ! -f "venv/bin/activate" ]; then \
+		echo "$(RED)[ERROR]$(NC) Virtual environment activation script not found"; \
+		exit 1; \
+	fi
+	@echo "$(BLUE)[INFO]$(NC) Installing Python dependencies..."
+	@source venv/bin/activate && pip install -q -r requirements.txt
+	@echo "$(GREEN)[✓]$(NC) Dependencies installed!"
+
 ##@ Cleanup
 
 clean: ## Clean up generated files
@@ -439,4 +485,9 @@ clean: ## Clean up generated files
 	@rm -f $(LAB_DIR)/*/packer-manifest.json
 	@rm -f $(LAB_DIR)/*/.terraform.lock.hcl
 	@rm -rf $(LAB_DIR)/*/.terraform/
+	@rm -rf .pytest_cache/
+	@rm -rf tests/__pycache__/
+	@rm -rf scripts/__pycache__/
+	@rm -f .coverage
+	@rm -rf htmlcov/
 	@echo "$(GREEN)[✓]$(NC) Cleaned up generated files"

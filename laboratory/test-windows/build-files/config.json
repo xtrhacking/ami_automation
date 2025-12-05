@@ -1,0 +1,36 @@
+{
+  "lab_name": "test-windows",
+  "os_type": "windows-server-2022",
+  "version": "1.0.0",
+  "features": {
+    "iis": {
+      "enabled": true,
+      "version": "10.0",
+      "features": [
+        "Web-Server",
+        "Web-Asp-Net45",
+        "Web-Net-Ext45"
+      ]
+    },
+    "firewall": {
+      "enabled": true,
+      "rules": [
+        {
+          "name": "Allow HTTP",
+          "port": 80,
+          "protocol": "TCP",
+          "direction": "Inbound"
+        }
+      ]
+    }
+  },
+  "deployment": {
+    "web_root": "C:\\inetpub\\wwwroot\\testapp",
+    "app_name": "testapp"
+  },
+  "metadata": {
+    "created_by": "ami_automation",
+    "automation_version": "v2",
+    "python_migration": true
+  }
+}
