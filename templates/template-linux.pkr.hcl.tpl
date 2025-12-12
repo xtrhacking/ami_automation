@@ -23,15 +23,16 @@ locals {
   ami_name  = "lab-{{LAB_NAME}}-${local.timestamp}"
 
   common_tags = {
-    Name             = "lab-{{LAB_NAME}}-${local.timestamp}"
-    Lab              = "lab-{{LAB_NAME}}-{{GIT_HASH}}"
+    Name             = "{{LAB_NAME}}-${local.timestamp}"
+    Laboratory       = "{{LAB_NAME}}"
     OS               = var.os_type
     CreatedAt        = timestamp()
     CreatedBy        = "packer"
-    Environment      = "laboratory"
-    ManagedBy        = "v2-ami-automation"
+    ManagedBy        = "ami-automation"
     SourceAmiId      = var.source_ami
     SourceAmiName    = var.source_ami_name
+    CommitHash       = "{{GIT_HASH}}"
+    BuildPackerMachine = "false"
   }
 }
 
@@ -64,7 +65,9 @@ source "amazon-ebs" "{{LAB_NAME}}" {
     local.common_tags,
     {
       Name = "packer-builder-{{LAB_NAME}}"
-      Type = "temporary"
+      BuildPackerMachine = "true"
+      Laboratory         = "{{LAB_NAME}}"
+      CommitHash       = "{{GIT_HASH}}"
     }
   )
 
@@ -88,7 +91,6 @@ build {
   provisioner "shell" {
       inline = [
         "mkdir -p /tmp/build-files",
-        #"chmod 777 /tmp/build-files"
       ]
   }
   provisioner "file" {

@@ -20,18 +20,19 @@ packer {
 # Local variables for naming and tagging
 locals {
   timestamp = regex_replace(timestamp(), "[- TZ:]", "")
-  ami_name  = "lab-{{LAB_NAME}}-${local.timestamp}"
+  ami_name  = "{{LAB_NAME}}-${local.timestamp}"
 
   common_tags = {
-    Name             = "lab-{{LAB_NAME}}-${local.timestamp}"
-    Lab              = "lab-{{LAB_NAME}}-{{GIT_HASH}}"
+    Name             = "{{LAB_NAME}}-${local.timestamp}"
+    Laboratory       = "{{LAB_NAME}}"
     OS               = var.os_type
     CreatedAt        = timestamp()
     CreatedBy        = "packer"
-    Environment      = "laboratory"
-    ManagedBy        = "v2-ami-automation"
+    ManagedBy        = "ami-automation"
     SourceAmiId      = var.source_ami
     SourceAmiName    = var.source_ami_name
+    CommitHash       = "{{GIT_HASH}}"
+    BuildPackerMachine = "false"
   }
 }
 
@@ -48,39 +49,85 @@ source "amazon-ebs" "{{LAB_NAME}}" {
   # This script configures WinRM for Packer to connect
   user_data = <<EOF
 <powershell>
-# Configure WinRM for Packer
+# Function to enable and configure WinRM
+function Enable-WinRMConfiguration {
+    [CmdletBinding()]
+    param (
+        [Parameter()]
+        [switch]$EnableHTTPS,
+
+        [Parameter()]
+        [switch]$AllowAllHosts,
+
+        [Parameter()]
+        [switch]$SkipNetworkCheck
+    )
+
+    try {
+
+        $params = @{
+            Force = $true
+            SkipNetworkProfileCheck = $SkipNetworkCheck
+        }
+
+        Enable-PSRemoting @params
+
+        Set-Service -Name winrm -StartupType Automatic
+
+        Set-Item -Path WSMan:\localhost\Client\TrustedHosts -Value * -Force
+
+        if ($AllowAllHosts) {
+            winrm set winrm/config/client '@{TrustedHosts="*"}'
+        }
+
+        winrm set winrm/config/winrs '@{MaxMemoryPerShellMB="1024"}'
+
+        if ($EnableHTTPS) {
+            Write-Host "Configuring HTTPS listener for WinRM..." -ForegroundColor Yellow
+
+            $certificateName = $env:COMPUTERNAME
+            $certificate = New-SelfSignedCertificate -DnsName $certificateName -CertStoreLocation Cert:\LocalMachine\My
+
+            $thumbprint = $certificate.Thumbprint
+            $command = "winrm create winrm/config/Listener?Address=*+Transport=HTTPS '@{Hostname=`"$certificateName`";CertificateThumbprint=`"$thumbprint`"}'"
+            Invoke-Expression $command
+
+            Write-Host "Creating firewall rule for WinRM over HTTPS..." -ForegroundColor Yellow
+            New-NetFirewallRule -DisplayName "Windows Remote Management (HTTPS-In)" -Name "Windows Remote Management (HTTPS-In)" -Profile Any -LocalPort 5986 -Protocol TCP -Direction Inbound
+        }
+
+        $service = Get-Service -Name WinRM
+        if ($service.Status -ne 'Running') {
+            Write-Host "Starting WinRM service..." -ForegroundColor Yellow
+            Start-Service -Name WinRM
+        }
+
+        Write-Host "`nVerifying WinRM configuration:" -ForegroundColor Cyan
+        winrm enumerate winrm/config/listener
+
+        Write-Host "`nWinRM service status:" -ForegroundColor Cyan
+        Get-Service -Name WinRM | Format-Table -Property Name, Status, StartType
+
+        Write-Host "`nWinRM firewall rules:" -ForegroundColor Cyan
+        Get-NetFirewallRule -DisplayName "Windows Remote Management*" | Format-Table -Property DisplayName, Enabled, Direction, Action
+
+        Write-Host "`nWinRM has been successfully configured!" -ForegroundColor Green
+        Write-Host "You can now connect to this machine using: Enter-PSSession -ComputerName $env:COMPUTERNAME" -ForegroundColor Green
+        if ($EnableHTTPS) {
+            Write-Host "For HTTPS connection use: Enter-PSSession -ComputerName $env:COMPUTERNAME -UseSSL" -ForegroundColor Green
+        }
+    }
+    catch {
+        Write-Error "An error occurred while configuring WinRM: $_"
+    }
+}
+
+# Set execution policy and run the configuration
+Set-ExecutionPolicy Unrestricted -Scope LocalMachine -Force -ErrorAction Ignore
 Write-Host "Setting up WinRM for Packer..."
 
-# Set execution policy
-Set-ExecutionPolicy Unrestricted -Scope LocalMachine -Force -ErrorAction Ignore
-
-# Don't set network location to Public
-# Skip the network location detection
-New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Network\NewNetworkWindowOff" -ErrorAction Ignore
-
-# Remove HTTP listener
-Remove-Item -Path WSMan:\Localhost\listener\listener* -Recurse -ErrorAction Ignore
-
-# Create a self-signed certificate
-$Cert = New-SelfSignedCertificate -CertstoreLocation Cert:\LocalMachine\My -DnsName "packer"
-New-Item -Path WSMan:\LocalHost\Listener -Transport HTTPS -Address * -CertificateThumbPrint $Cert.Thumbprint -Force
-
-# Configure WinRM
-winrm quickconfig -q
-winrm set "winrm/config" '@{MaxTimeoutms="1800000"}'
-winrm set "winrm/config/winrs" '@{MaxMemoryPerShellMB="1024"}'
-winrm set "winrm/config/service" '@{AllowUnencrypted="true"}'
-winrm set "winrm/config/service/auth" '@{Basic="true"}'
-winrm set "winrm/config/client" '@{AllowUnencrypted="true"}'
-winrm set "winrm/config/client/auth" '@{Basic="true"}'
-winrm set "winrm/config/listener?Address=*+Transport=HTTPS" "@{Port=`"5986`";Hostname=`"packer`";CertificateThumbprint=`"$($Cert.Thumbprint)`"}"
-
-# Open Firewall
-netsh advfirewall firewall add rule profile=any name="WinRM HTTPS" dir=in localport=5986 protocol=TCP action=allow
-
-# Restart WinRM
-net stop winrm
-net start winrm
+# Execute the function with parameters
+Enable-WinRMConfiguration -EnableHTTPS -AllowAllHosts -SkipNetworkCheck
 
 Write-Host "WinRM setup completed!"
 </powershell>
@@ -106,7 +153,9 @@ EOF
     local.common_tags,
     {
       Name = "packer-builder-{{LAB_NAME}}"
-      Type = "temporary"
+      BuildPackerMachine = "true"
+      Laboratory         = "{{LAB_NAME}}"
+      CommitHash       = "{{GIT_HASH}}"
     }
   )
 

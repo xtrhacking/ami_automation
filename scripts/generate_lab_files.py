@@ -138,9 +138,10 @@ def generate_communicator_config(communicator: str, ssh_username: str) -> str:
     if communicator == "winrm":
         return f'''  communicator = "winrm"
   winrm_username = "{ssh_username}"
+  winrm_port = 5986
   winrm_insecure = true
   winrm_use_ssl = true
-  winrm_timeout = "30m"
+  winrm_timeout = "10m"
 
   # Additional WinRM settings for better reliability
   winrm_use_ntlm = true'''
