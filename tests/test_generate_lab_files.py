@@ -139,7 +139,7 @@ class TestGenerateCommunicatorConfig:
         assert 'winrm_username = "Administrator"' in result
         assert 'winrm_insecure = true' in result
         assert 'winrm_use_ssl = true' in result
-        assert 'winrm_timeout = "30m"' in result
+        assert 'winrm_timeout = "10m"' in result
 
     def test_default_is_ssh(self):
         """Test that default communicator is SSH."""
