@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.3.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2024-02-05T10:36:19-03:00</updated><id>http://localhost:4000/feed.xml</id><title type="html">ExtremeX</title><subtitle>ExtremeX is a blog about extreme sports and the people who love them. It is a place to share your experiences and learn from others. We are a community of people who love to push the limits and live life to the fullest. Join us and share your stories, tips, and tricks with the world.</subtitle><entry><title type="html">Bem-vindo ao XtremeX!</title><link href="http://localhost:4000/ad/2024/02/05/welcome-to-jekyll.html" rel="alternate" type="text/html" title="Bem-vindo ao XtremeX!" /><published>2024-02-05T08:28:41-03:00</published><updated>2024-02-05T08:28:41-03:00</updated><id>http://localhost:4000/ad/2024/02/05/welcome-to-jekyll</id><content type="html" xml:base="http://localhost:4000/ad/2024/02/05/welcome-to-jekyll.html"><![CDATA[<p>Olá estou começando a escrever no blog da empresa XtremeX. A ideia é que eu escreva sobre tecnologia, mas também sobre o que aprendi sobre segurança da informação.</p>
+
+<p>Somos uma empresa de tecnologia que presta serviços de desenvolvimento de software e consultoria em segurança da informação. Nossa equipe é composta por desenvolvedores, analistas de segurança e administradores de sistemas.</p>
+
+<p>Espero que você goste do que eu escrever e que possa aprender algo novo comigo. Se tiver alguma dúvida ou sugestão, por favor, entre em contato comigo.</p>
+
+<p>Até mais!</p>]]></content><author><name></name></author><category term="ad" /><summary type="html"><![CDATA[Olá estou começando a escrever no blog da empresa XtremeX. A ideia é que eu escreva sobre tecnologia, mas também sobre o que aprendi sobre segurança da informação.]]></summary></entry><entry><title type="html">AD</title><link href="http://localhost:4000/ad/2024/02/05/ad.html" rel="alternate" type="text/html" title="AD" /><published>2024-02-05T00:00:00-03:00</published><updated>2024-02-05T00:00:00-03:00</updated><id>http://localhost:4000/ad/2024/02/05/ad</id><content type="html" xml:base="http://localhost:4000/ad/2024/02/05/ad.html"><![CDATA[<h1 id="consultoria-em-cybersecurity">Consultoria em Cybersecurity</h1>
+
+<p>Estamos iniciando uma consultoria em segurança da informação para a empresas.</p>
+
+<p>Nossa equipe é composta por desenvolvedores, analistas de segurança e administradores de sistemas.</p>
+
+<p>Temos como objetivo ajudar as empresas a se protegerem de ataques cibernéticos e a se manterem em conformidade com as leis e regulamentações de segurança da informação.</p>
+
+<p>Nossos serviços incluem:</p>
+<ul>
+  <li>Testes de penetração</li>
+  <li>Análise de vulnerabilidades</li>
+  <li>Consultoria em segurança da informação</li>
+  <li>Treinamento em segurança da informação</li>
+  <li>Desenvolvimento de software seguro</li>
+</ul>
+
+<p>Se você está interessado em nossos serviços, entre em contato conosco.</p>]]></content><author><name></name></author><category term="AD" /><summary type="html"><![CDATA[Consultoria em Cybersecurity]]></summary></entry></feed>

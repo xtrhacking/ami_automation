@@ -1,0 +1,22 @@
+---
+layout: post
+title:  "AD"
+categories: AD
+---
+
+# Consultoria em Cybersecurity
+
+Estamos iniciando uma consultoria em segurança da informação para a empresas. 
+
+Nossa equipe é composta por desenvolvedores, analistas de segurança e administradores de sistemas.
+
+Temos como objetivo ajudar as empresas a se protegerem de ataques cibernéticos e a se manterem em conformidade com as leis e regulamentações de segurança da informação.
+
+Nossos serviços incluem:
+- Testes de penetração
+- Análise de vulnerabilidades
+- Consultoria em segurança da informação
+- Treinamento em segurança da informação
+- Desenvolvimento de software seguro
+
+Se você está interessado em nossos serviços, entre em contato conosco.

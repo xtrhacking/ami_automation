@@ -55,6 +55,7 @@ help: ## Display this help message
 	@echo "$(YELLOW)Examples:$(NC)"
 	@echo "  make build-ami FOLDER=sql-injection OS=ubuntu-24"
 	@echo "  make build-ami FOLDER=sql-injection OS=ubuntu-24 AMI_ID=ami-0123456789abcdef0"
+	@echo "  make build-ami FOLDER=test-windows DRY_RUN=true"
 	@echo "  make validate FOLDER=sql-injection"
 	@echo "  make init-lab FOLDER=web-vuln OS=ubuntu-22"
 	@echo "  make list-labs"
@@ -319,10 +320,10 @@ validate: check-prereqs ## Validate Packer configuration (requires FOLDER=<lab-n
 	@echo ""
 	@echo "$(GREEN)[✓]$(NC) Validation completed successfully!"
 
-build-ami: check-prereqs check-aws-creds install-deps ## Build AMI (requires FOLDER=<lab-name>, optional: OS=<os-type> AMI_ID=<ami-id>)
+build-ami: check-prereqs check-aws-creds install-deps ## Build AMI (requires FOLDER=<lab-name>, optional: OS=<os-type> AMI_ID=<ami-id> DRY_RUN=true)
 	@if [ -z "$(FOLDER)" ]; then \
 		echo "$(RED)[ERROR]$(NC) FOLDER parameter is required"; \
-		echo "$(YELLOW)[INFO]$(NC) Usage: make build-ami FOLDER=<lab-name> [OS=<os-type>] [AMI_ID=<ami-id>]"; \
+		echo "$(YELLOW)[INFO]$(NC) Usage: make build-ami FOLDER=<lab-name> [OS=<os-type>] [AMI_ID=<ami-id>] [DRY_RUN=true]"; \
 		exit 1; \
 	fi
 	@if [ ! -d "$(LAB_DIR)/$(FOLDER)" ]; then \
@@ -393,6 +394,14 @@ build-ami: check-prereqs check-aws-creds install-deps ## Build AMI (requires FOL
 	fi; \
 	echo "$(GREEN)[✓]$(NC) Generated variables.pkr.hcl"; \
 	echo "$(GREEN)[✓]$(NC) Generated template.pkr.hcl"; \
+	user_data_type=$$(yq eval ".os_mappings.$$OS_TYPE.user_data_type" $(OS_MAPPINGS)); \
+	if [ "$$user_data_type" == "powershell" ]; then \
+		echo "$(BLUE)[INFO]$(NC) Processing Windows PowerShell script..."; \
+		source venv/bin/activate && python3 $(SCRIPTS_DIR)/auto_split_restart.py "$(LAB_DIR)/$(FOLDER)"; \
+		if [ $$? -eq 0 ]; then \
+			echo "$(GREEN)[✓]$(NC) Script processing completed"; \
+		fi; \
+	fi; \
 	os_exists=$$(yq eval ".os_mappings.$$OS_TYPE" $(OS_MAPPINGS)); \
 	if [ "$$os_exists" == "null" ]; then \
 		echo "$(RED)[✗] ERROR: OS '$$OS_TYPE' not found in configuration$(NC)"; \
@@ -411,36 +420,52 @@ build-ami: check-prereqs check-aws-creds install-deps ## Build AMI (requires FOL
 	@cd "$(LAB_DIR)/$(FOLDER)" && packer validate .
 	@echo "$(GREEN)[✓]$(NC) Validation passed!"
 	@echo ""
-	@echo "$(BLUE)[INFO]$(NC) Building AMI (this may take several minutes)..."
-	@echo ""
-	@cd "$(LAB_DIR)/$(FOLDER)" && \
-		packer build . ; \
-		if [ $$? -eq 0 ]; then \
-			if [ -f "packer-manifest.json" ]; then \
-				ami_id=$$(jq -r '.builds[-1].artifact_id' packer-manifest.json | cut -d: -f2); \
-				ami_name=$$(jq -r '.builds[-1].custom_data.ami_name // .builds[-1].name // "unknown"' packer-manifest.json 2>/dev/null || echo "unknown"); \
-				if [ "$$ami_name" = "null" ] || [ -z "$$ami_name" ]; then \
-					ami_name=$$(aws ec2 describe-images --image-ids $$ami_id --query 'Images[0].Name' --output text 2>/dev/null || echo "unknown"); \
+	@if [ "$(DRY_RUN)" = "true" ] || [ "$(DRY_RUN)" = "1" ]; then \
+		echo ""; \
+		echo "$(YELLOW)╔════════════════════════════════════════════════════════════════╗$(NC)"; \
+		echo "$(YELLOW)║                   DRY RUN MODE                                 ║$(NC)"; \
+		echo "$(YELLOW)╚════════════════════════════════════════════════════════════════╝$(NC)"; \
+		echo ""; \
+		echo "$(YELLOW)[DRY-RUN]$(NC) Skipping Packer build"; \
+		echo "$(GREEN)[✓]$(NC) All pre-build checks passed"; \
+		echo "$(GREEN)[✓]$(NC) Configuration validated"; \
+		echo "$(GREEN)[✓]$(NC) Scripts processed"; \
+		echo ""; \
+		echo "$(YELLOW)[INFO]$(NC) To execute the actual build, run:"; \
+		echo "$(CYAN)      make build-ami FOLDER=$(FOLDER)$(NC)"; \
+		echo ""; \
+	else \
+		echo "$(BLUE)[INFO]$(NC) Building AMI (this may take several minutes)..."; \
+		echo ""; \
+		cd "$(LAB_DIR)/$(FOLDER)" && \
+			packer build . ; \
+			if [ $$? -eq 0 ]; then \
+				if [ -f "packer-manifest.json" ]; then \
+					ami_id=$$(jq -r '.builds[-1].artifact_id' packer-manifest.json | cut -d: -f2); \
+					ami_name=$$(jq -r '.builds[-1].custom_data.ami_name // .builds[-1].name // "unknown"' packer-manifest.json 2>/dev/null || echo "unknown"); \
+					if [ "$$ami_name" = "null" ] || [ -z "$$ami_name" ]; then \
+						ami_name=$$(aws ec2 describe-images --image-ids $$ami_id --query 'Images[0].Name' --output text 2>/dev/null || echo "unknown"); \
+					fi; \
+					echo ""; \
+					echo "$(GREEN)╔════════════════════════════════════════════════════════════════╗$(NC)"; \
+					echo "$(GREEN)║               AMI Created Successfully! 🎉                     ║$(NC)"; \
+					echo "$(GREEN)╚════════════════════════════════════════════════════════════════╝$(NC)"; \
+					echo ""; \
+					echo "$(GREEN)📦 AMI ID:$(NC)   $$ami_id"; \
+					git_hash=$$(git rev-parse --short=7 HEAD 2>/dev/null || echo "unknown"); \
+					echo "$(GREEN)🏷️  Tag:$(NC)      lab-$(FOLDER)-$$git_hash"; \
+					echo "$(GREEN)📝 AMI Name:$(NC) $$ami_name"; \
+					echo ""; \
 				fi; \
+			else \
 				echo ""; \
-				echo "$(GREEN)╔════════════════════════════════════════════════════════════════╗$(NC)"; \
-				echo "$(GREEN)║               AMI Created Successfully! 🎉                     ║$(NC)"; \
-				echo "$(GREEN)╚════════════════════════════════════════════════════════════════╝$(NC)"; \
+				echo "$(RED)╔════════════════════════════════════════════════════════════════╗$(NC)"; \
+				echo "$(RED)║                   Build Failed ❌                              ║$(NC)"; \
+				echo "$(RED)╚════════════════════════════════════════════════════════════════╝$(NC)"; \
 				echo ""; \
-				echo "$(GREEN)📦 AMI ID:$(NC)   $$ami_id"; \
-				git_hash=$$(git rev-parse --short=7 HEAD 2>/dev/null || echo "unknown"); \
-				echo "$(GREEN)🏷️  Tag:$(NC)      lab-$(FOLDER)-$$git_hash"; \
-				echo "$(GREEN)📝 AMI Name:$(NC) $$ami_name"; \
-				echo ""; \
+				exit 1; \
 			fi; \
-		else \
-			echo ""; \
-			echo "$(RED)╔════════════════════════════════════════════════════════════════╗$(NC)"; \
-			echo "$(RED)║                   Build Failed ❌                              ║$(NC)"; \
-			echo "$(RED)╚════════════════════════════════════════════════════════════════╝$(NC)"; \
-			echo ""; \
-			exit 1; \
-		fi
+	fi
 
 ##@ Testing
 
