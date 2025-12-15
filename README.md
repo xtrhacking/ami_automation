@@ -919,12 +919,13 @@ Toda AMI criada recebe automaticamente as seguintes tags:
 | Tag              | Descrição                                    | Exemplo                              |
 |------------------|----------------------------------------------|--------------------------------------|
 | Name             | Nome da AMI com timestamp                    | lab-sql-injection-20250121-153045    |
-| Lab              | Nome do lab com git hash                     | lab-sql-injection-a1b2c3d            |
+| Laboratory       | Nome do lab                                  | lab-sql-injection.                   |
 | OS               | Sistema operacional usado                    | ubuntu-24                            |
 | CreatedAt        | Timestamp de criação                         | 2025-01-21T15:30:45Z                 |
 | CreatedBy        | Criador (sempre "packer")                    | packer                               |
 | Environment      | Ambiente (sempre "laboratory")               | laboratory                           |
 | ManagedBy        | Sistema gerenciador                          | v2-ami-automation                    |
+| BuildPackerMachine| Tag para identificar o custo da instancia   | true/false.                          |
 | **SourceAmiId**  | ID da AMI source                             | ami-0abcdef1234567890                |
 | **SourceAmiName**| Nome da AMI source                           | ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-20231001 |
 
