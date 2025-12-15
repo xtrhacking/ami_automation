@@ -1009,14 +1009,6 @@ Os testes são executados automaticamente:
 - ✅ Em pull requests (GitHub Actions)
 - ✅ Antes de releases
 
-## 📚 Documentação Adicional
-
-Para informações mais detalhadas, consulte:
-
-- **[`docs/DRY_RUN.md`](docs/DRY_RUN.md)** - Guia completo do modo DRY_RUN
-- **[`docs/WINDOWS_RESTART.md`](docs/WINDOWS_RESTART.md)** - Documentação do tratamento de Restart-Computer
-- **[`WINDOWS_RESTART_SUMMARY.md`](WINDOWS_RESTART_SUMMARY.md)** - Resumo da implementação
-
 ## 🤝 Contribuindo
 
 Contribuições são bem-vindas! Para contribuir:
